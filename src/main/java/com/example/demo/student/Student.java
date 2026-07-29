@@ -7,6 +7,7 @@ import java.time.LocalDate;
 @Entity
 @Table
 public class Student {
+
     @Id
     @SequenceGenerator(
             name = "student_Sequence",
@@ -22,6 +23,9 @@ public class Student {
     private String email;
     private LocalDate dob;
     private Integer age;
+
+    public Student() {
+    }
 
     public Student(Long id) {
         this.id = id;
