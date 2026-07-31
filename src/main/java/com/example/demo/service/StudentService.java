@@ -1,27 +1,57 @@
-package com.example.demo.student;
+package com.example.demo.service;
 
+import com.example.demo.dto.StudentRequest;
+import com.example.demo.entity.Student;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import com.example.demo.repository.StudentRepository;
 
-import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class StudentService {
-    private final StudentRepository  studentRepository;
-   @Autowired
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(StudentService.class);
+
+    private final StudentRepository studentRepository;
+
+    @Autowired
     public StudentService(StudentRepository studentRepository) {
         this.studentRepository = studentRepository;
     }
 
     public List<Student> getStudents() {
-       return studentRepository.findAll();
+        logger.info("Fetching all students");
+        return studentRepository.findAll();
     }
-    public void addNewStudent(Student student) {
+
+    public void addNewStudent(StudentRequest request) {
+
+        Optional<Student> studentByEmail =
+                studentRepository.findStudentByEmail(request.getEmail());
+
+        if (studentByEmail.isPresent()) {
+            throw new IllegalStateException("Email already taken");
+        }
+
+        Student student = new Student();
+
+        student.setName(request.getName());
+        student.setEmail(request.getEmail());
+        student.setDob(request.getDob());
+        student.setAge(request.getAge());
+
+        logger.info("Adding student {}", student.getEmail());
+
         studentRepository.save(student);
     }
+
     @Transactional
     public void updateStudent(Long studentId,
                               String name,
@@ -45,7 +75,10 @@ public class StudentService {
 
             student.setEmail(email);
         }
+
+        logger.info("Updated student {}", studentId);
     }
+
     public void deleteStudent(Long studentId) {
 
         boolean exists = studentRepository.existsById(studentId);
@@ -54,6 +87,8 @@ public class StudentService {
             throw new IllegalStateException(
                     "Student with id " + studentId + " does not exist");
         }
+
+        logger.warn("Deleting student {}", studentId);
 
         studentRepository.deleteById(studentId);
     }
