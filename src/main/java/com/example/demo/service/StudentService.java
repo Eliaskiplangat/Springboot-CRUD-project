@@ -1,9 +1,14 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.StudentRequest;
+import com.example.demo.dto.StudentResponse;
 import com.example.demo.entity.Student;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import com.example.demo.repository.StudentRepository;
 
@@ -26,9 +31,25 @@ public class StudentService {
         this.studentRepository = studentRepository;
     }
 
-    public List<Student> getStudents() {
-        logger.info("Fetching all students");
-        return studentRepository.findAll();
+    public Page<StudentResponse> getStudents(
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return studentRepository.findAll(pageable)
+                .map(student -> new StudentResponse(
+                        student.getId(),
+                        student.getName(),
+                        student.getEmail(),
+                        student.getAge()
+                ));
     }
 
     public void addNewStudent(StudentRequest request) {

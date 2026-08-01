@@ -8,20 +8,21 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class ApiExceptionHandler {
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiException> handleIllegalStateException(
             IllegalStateException ex) {
 
-        ApiException apiException = new ApiException(
-                ex.getMessage(),
-                HttpStatus.BAD_REQUEST.value(),
-                LocalDateTime.now()
-        );
+        ApiException apiException =
+                new ApiException(
+                        ex.getMessage(),
+                        HttpStatus.BAD_REQUEST.value(),
+                        LocalDateTime.now()
+                );
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(apiException);
+        return new ResponseEntity<>(apiException,
+                HttpStatus.BAD_REQUEST);
     }
+
 }

@@ -1,12 +1,15 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.StudentRequest;
-import com.example.demo.entity.Student;
+import com.example.demo.dto.StudentResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.demo.service.StudentService;
 
-import java.util.List;
+
 
 @RestController
 @RequestMapping(path = "api/v1/student")
@@ -19,30 +22,46 @@ public class StudentController {
     }
 
     @GetMapping
-    public List<Student> getStudents() {
-        return studentService.getStudents();
+    public ResponseEntity<Page<StudentResponse>> getStudents(
+
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+
+        return ResponseEntity.ok(
+                studentService.getStudents(page, size, sortBy, direction)
+        );
     }
 
+
     @PostMapping
-    public void registerNewStudent(
+    public ResponseEntity<String> registerNewStudent(
             @Valid @RequestBody StudentRequest request) {
 
         studentService.addNewStudent(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Student created successfully");
     }
 
-    @PutMapping(path = "{studentId}")
-    public void updateStudent(
-            @PathVariable("studentId") Long studentId,
+    @PutMapping("{studentId}")
+    public ResponseEntity<String> updateStudent(
+            @PathVariable Long studentId,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String email) {
 
         studentService.updateStudent(studentId, name, email);
+
+        return ResponseEntity.ok("Student updated successfully");
     }
 
-    @DeleteMapping(path = "{studentId}")
-    public void deleteStudent(
-            @PathVariable("studentId") Long studentId) {
+    @DeleteMapping("{studentId}")
+    public ResponseEntity<String> deleteStudent(
+            @PathVariable Long studentId) {
 
         studentService.deleteStudent(studentId);
+
+        return ResponseEntity.ok("Student deleted successfully");
     }
 }
