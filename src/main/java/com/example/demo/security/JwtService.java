@@ -3,6 +3,7 @@ package com.example.demo.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -13,22 +14,21 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    // In production, load this from an environment variable / application.properties,
-    // never hardcode a real secret. This is a placeholder for development.
-    private static final String SECRET_KEY =
-            "this-is-a-placeholder-dev-secret-key-change-me-before-prod-1234567890";
+    @Value("${jwt.secret}")
+    private String secretKey;
 
-    private static final long EXPIRATION_MS = 1000 * 60 * 60; // 1 hour
+    @Value("${jwt.expiration}")
+    private long expirationMs;
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
     public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
+                .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(getSigningKey())
                 .compact();
     }

@@ -7,6 +7,8 @@ import com.example.demo.entity.Role;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.JwtService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -34,6 +38,7 @@ public class AuthService {
     public void register(RegisterRequest request) {
 
         if (userRepository.existsByUsername(request.getUsername())) {
+            logger.warn("Registration failed - username already taken: {}", request.getUsername());
             throw new IllegalStateException("Username already taken");
         }
 
@@ -44,6 +49,7 @@ public class AuthService {
         );
 
         userRepository.save(user);
+        logger.info("New user registered: {}", user.getUsername());
     }
 
     public JwtResponse login(LoginRequest request) {
@@ -55,15 +61,18 @@ public class AuthService {
                 )
         );
 
-        UserDetails userDetails = userRepository.findByUsername(request.getUsername())
-                .map(user -> org.springframework.security.core.userdetails.User
-                        .withUsername(user.getUsername())
-                        .password(user.getPassword())
-                        .authorities("ROLE_" + user.getRole().name())
-                        .build())
+        User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new IllegalStateException("User not found"));
 
+        UserDetails userDetails = org.springframework.security.core.userdetails.User
+                .withUsername(user.getUsername())
+                .password(user.getPassword())
+                .authorities("ROLE_" + user.getRole().name())
+                .build();
+
         String token = jwtService.generateToken(userDetails);
+
+        logger.info("User logged in: {}", user.getUsername());
 
         return new JwtResponse(token);
     }
