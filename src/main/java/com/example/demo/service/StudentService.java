@@ -113,4 +113,16 @@ public class StudentService {
 
         studentRepository.deleteById(studentId);
     }
+    public List<StudentResponse> searchStudents(String name) {
+
+        return studentRepository
+                .findByNameContainingIgnoreCase(name)
+                .stream()
+                .map(student -> new StudentResponse(
+                        student.getId(),
+                        student.getName(),
+                        student.getEmail(),
+                        student.getAge()))
+                .toList();
+    }
 }

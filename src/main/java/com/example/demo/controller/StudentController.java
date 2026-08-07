@@ -6,9 +6,11 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.example.demo.service.StudentService;
 
+import java.util.List;
 
 
 @RestController
@@ -21,6 +23,12 @@ public class StudentController {
         this.studentService = studentService;
     }
 
+    @GetMapping("/search")
+    public List<StudentResponse> searchStudents(
+            @RequestParam String name) {
+
+        return studentService.searchStudents(name);
+    }
     @GetMapping
     public ResponseEntity<Page<StudentResponse>> getStudents(
 
@@ -35,6 +43,7 @@ public class StudentController {
     }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<String> registerNewStudent(
             @Valid @RequestBody StudentRequest request) {
@@ -45,6 +54,7 @@ public class StudentController {
                 .body("Student created successfully");
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("{studentId}")
     public ResponseEntity<String> updateStudent(
             @PathVariable Long studentId,
@@ -56,6 +66,7 @@ public class StudentController {
         return ResponseEntity.ok("Student updated successfully");
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("{studentId}")
     public ResponseEntity<String> deleteStudent(
             @PathVariable Long studentId) {
